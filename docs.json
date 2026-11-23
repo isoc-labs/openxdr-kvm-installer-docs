@@ -1,0 +1,168 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "OpenXDR KVM Installer",
+  "description": "Operator documentation for deploying Stellar Cyber OpenXDR Data Processor and Sensor components on KVM.",
+  "colors": {
+    "primary": "#1F59E0",
+    "light": "#2982E8",
+    "dark": "#5B8CFF"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "button",
+      "label": "Installer Source",
+      "href": "https://github.com/xdr-labs/OpenXDR-KVM-Installer"
+    }
+  },
+  "search": {
+    "prompt": "문서 검색 / Search KVM Installer docs..."
+  },
+  "seo": {
+    "indexing": "navigable"
+  },
+  "appearance": {
+    "default": "system",
+    "strict": false
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "navigation": {
+    "languages": [
+      {
+        "language": "en",
+        "tabs": [
+          {
+            "tab": "Deployment Guide",
+            "groups": [
+              {
+                "group": "Start Here",
+                "pages": [
+                  "index",
+                  "getting-started/choose-installer",
+                  "getting-started/deployment-guide",
+                  "getting-started/requirements",
+                  "getting-started/installing-ubuntu-24-04",
+                  "getting-started/quickstart",
+                  "getting-started/installation-demo-videos"
+                ]
+              },
+              {
+                "group": "Installer Guides",
+                "pages": [
+                  "installers/dp",
+                  "installers/dp-cluster-initial-configuration",
+                  "installers/sensor",
+                  "installers/aio-sensor",
+                  "installers/aio-sensor-initial-configuration"
+                ]
+              },
+              {
+                "group": "Operations",
+                "pages": [
+                  "operations/dry-run-validation",
+                  "operations/reboot-resume",
+                  "operations/troubleshooting",
+                  "operations/appliance-cli"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "Reference",
+            "groups": [
+              {
+                "group": "Architecture",
+                "pages": [
+                  "reference/architecture",
+                  "reference/networking",
+                  "reference/storage-performance"
+                ]
+              },
+              {
+                "group": "Operator Reference",
+                "pages": [
+                  "reference/step-matrix",
+                  "reference/state-logs",
+                  "reference/post-deployment"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "ko",
+        "tabs": [
+          {
+            "tab": "설치·운영 가이드",
+            "groups": [
+              {
+                "group": "시작하기",
+                "pages": [
+                  "ko/index",
+                  "ko/getting-started/choose-installer",
+                  "ko/getting-started/deployment-guide",
+                  "ko/getting-started/requirements",
+                  "ko/getting-started/installing-ubuntu-24-04",
+                  "ko/getting-started/quickstart",
+                  "ko/getting-started/installation-demo-videos"
+                ]
+              },
+              {
+                "group": "설치 가이드",
+                "pages": [
+                  "ko/installers/dp",
+                  "ko/installers/dp-cluster-initial-configuration",
+                  "ko/installers/sensor",
+                  "ko/installers/aio-sensor",
+                  "ko/installers/aio-sensor-initial-configuration"
+                ]
+              },
+              {
+                "group": "운영 및 복구",
+                "pages": [
+                  "ko/operations/dry-run-validation",
+                  "ko/operations/reboot-resume",
+                  "ko/operations/troubleshooting",
+                  "ko/operations/appliance-cli"
+                ]
+              }
+            ]
+          },
+          {
+            "tab": "참고 자료",
+            "groups": [
+              {
+                "group": "아키텍처",
+                "pages": [
+                  "ko/reference/architecture",
+                  "ko/reference/networking",
+                  "ko/reference/storage-performance"
+                ]
+              },
+              {
+                "group": "운영 참고",
+                "pages": [
+                  "ko/reference/step-matrix",
+                  "ko/reference/state-logs",
+                  "ko/reference/post-deployment"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://kvm.xdr.ooo"
+  }
+}

@@ -1,0 +1,27 @@
+---
+title: "설치 단계 비교표"
+description: "이 사이트에서 제공하는 세 가지 설치 프로그램의 실행 단계를 비교합니다."
+---
+
+# 설치 단계 비교표
+
+| Step | DP | Sensor | AIO + Sensor |
+| ---: | --- | --- | --- |
+| 1 | HW/NIC/Disk | HW/NIC/CPU/Memory/SPAN | HW/NIC/SPAN |
+| 2 | HWE Kernel | HWE Kernel | HWE Kernel |
+| 3 | NIC/ifupdown/Network | NIC/ifupdown/Network | NIC/ifupdown/Network |
+| 4 | KVM/libvirt | KVM/libvirt | KVM/libvirt |
+| 5 | Kernel/KSM/Swap | Kernel/KSM/Swap | Kernel/KSM/Swap |
+| 6 | SR-IOV Driver + NTPsec | libvirt Hook + NTPsec | libvirt Hook + NTPsec |
+| 7 | DL/DA LVM | Sensor LV + Download | AIO LVM |
+| 8 | Hook + OOM Recovery | Sensor Deploy | AIO Download |
+| 9 | DP Image/Script | Sensor Network/SPAN | AIO Deploy |
+| 10 | DL-master Deploy | Appliance CLI | Sensor LV + Download |
+| 11 | DA-master Deploy | — | Sensor Deploy |
+| 12 | SR-IOV/CPU/Passthrough | — | PCI Passthrough/CPU Affinity |
+| 13 | Appliance CLI | — | Appliance CLI |
+| 14 | NFS Backup Config | — | — |
+
+<Note>
+Step ID는 저장된 작업 상태와 연결됩니다. 실패한 사전 조건을 건너뛰기 위해 상태를 수동으로 앞으로 이동시키지 마십시오.
+</Note>

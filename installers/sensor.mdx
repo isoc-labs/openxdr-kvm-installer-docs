@@ -1,0 +1,628 @@
+---
+title: "Sensor KVM Installer User Guide"
+description: "Complete procedure for installing, configuring, validating, and operating a Stellar Cyber OpenXDR Sensor VM on an Ubuntu Server 24.04 LTS KVM host."
+---
+
+# Sensor KVM Installer User Guide
+
+![OpenXDR KVM Sensor Installer quick reference](/images/Sensor-Installer/1.png)
+
+## Overview
+
+Use this page as the **complete standalone Sensor deployment runbook**. It includes Sensor-specific hardware sizing, NAT/Bridge choices, SPAN attachment, installer execution, and the required Sensor registration and authorization steps.
+
+The documented baseline is Ubuntu Server 24.04 LTS.
+
+## 1. System Architecture
+
+### Hardware at a Glance
+
+| Item | Sensor requirement / guidance |
+| --- | --- |
+| CPU | 12 vCPU or more; VM sizing is calculated automatically |
+| Memory | 16 GB or more; VM sizing is calculated automatically |
+| Storage | At least 100 GB free in `ubuntu-vg` before Sensor storage creation |
+| Management NIC | 1 GbE or faster |
+| SPAN NIC | One or more interfaces required by the traffic design |
+| SPAN attachment | PCI Passthrough, or Bridge where passthrough is restricted |
+| BIOS | CPU virtualization enabled; VT-d/IOMMU required for PCI Passthrough |
+| Validated hardware | Dell PowerEdge R650 / R660 / R670 |
+| OS | Ubuntu Server 24.04 LTS for this guide |
+
+<Note>
+These values are the project starting baseline, not a universal production sizing rule. Increase resources according to traffic volume and workload.
+</Note>
+
+### Architecture Overview
+
+Stellar Cyber XDR Sensor is deployed as a single virtual machine on a physical server using KVM virtualization.
+
+The installer automatically configures:
+
+- Ubuntu 24.04 KVM host
+- libvirt / qemu-kvm virtualization layer
+- XDR Sensor virtual machine
+- NAT or L2 bridge-based Sensor networking
+- PCI-passthrough-based SPAN traffic collection
+- dedicated LVM-based storage
+- kernel and CPU performance tuning
+
+The installer automates:
+
+- host OS preparation and performance tuning
+- network topology configuration
+- storage provisioning
+- Sensor VM lifecycle management
+- high-speed packet capture using PCI passthrough
+
+## 2. Pre-Installation Preparation
+
+### System Requirements
+
+Before running the installer:
+
+- **root privileges are required**
+- the installer performs system-level operations including:
+  - network changes
+  - kernel and GRUB modification
+  - disk and filesystem configuration
+  - virtual-machine creation and modification
+
+### Documented Operating System
+
+- This guide is based on **Ubuntu Server 24.04 LTS**.
+- The source installer may retain compatibility code for older Ubuntu releases. For legacy deployment, verify the current source and the support scope of the target OpenXDR release separately.
+
+### Preparation Steps
+
+1. Switch to a root shell.
+
+```bash
+sudo -i
+```
+
+2. Download the installer into the current directory.
+
+```bash
+curl -O https://raw.githubusercontent.com/xdr-labs/OpenXDR-KVM-Installer/main/Sensor-Installer.sh
+```
+
+3. Make it executable.
+
+```bash
+chmod +x Sensor-Installer.sh
+```
+
+4. Run the installer.
+
+```bash
+./Sensor-Installer.sh
+```
+
+## 3. Sensor Network Modes
+
+The installer supports two Sensor network modes for different operational requirements.
+
+### NAT Mode
+
+- the KVM host and Sensor VM share one external IP address
+- uses the libvirt internal NAT network (`virbr0`)
+- assigns a fixed internal address to the Sensor VM
+  - default: `192.168.122.2`
+- requires additional operational consideration because:
+  - external access is indirect
+  - port forwarding and management traffic flow must be considered
+
+#### Typical Use Cases
+
+- lab, POC, and production environments
+- simple deployments with limited external exposure
+- environments with limited IP address resources
+
+> The management interface can use NAT mode while SPAN NICs use Bridge mode.
+
+![NAT management interface with Bridge SPAN example](/images/Sensor-Installer/2.png)
+
+### Bridge Mode
+
+- the Sensor VM connects through a **dedicated L2 bridge**
+- Sensor traffic is separated from the KVM host
+- requires a high-performance physical NIC
+- Appliance CLI cannot apply ACLs to the Sensor bridge
+
+#### Recommended Use Cases
+
+- high-throughput Sensor deployments
+- environments using 10GbE or faster interfaces
+- environments requiring strict separation between host and Sensor interfaces
+- production deployments of performance-sensitive Sensor nodes
+
+> The management interface can use Bridge mode while SPAN NICs use PCI Passthrough.
+
+![Bridge management interface with PCI Passthrough SPAN example](/images/Sensor-Installer/3.png)
+
+## 4. SPAN Attachment Methods
+
+The installer supports two SPAN attachment methods.
+
+### PCI Passthrough (Default)
+
+- passes a physical SPAN NIC directly to the Sensor VM
+- provides maximum packet throughput and minimum latency
+- completely bypasses the virtual-switch layer
+
+#### Key Characteristics
+
+- uses standard PCI passthrough
+- requires IOMMU to be enabled in BIOS
+- default and recommended for most physical environments
+
+### Bridge Mode (SPAN)
+
+- connects SPAN traffic through an L2 bridge
+- primarily used in:
+  - private-cloud environments
+  - virtualized or nested-virtualization environments
+  - environments where PCI passthrough is restricted
+
+This trades some performance for greater flexibility and compatibility.
+
+### NIC Preparation and Design Guidance
+
+Physically connect the NICs required by the deployment before running the installer.
+
+The installer identifies interfaces using link state, so connected cables make NIC roles easier to distinguish.
+
+![Sensor SPAN NIC selection screen](/images/Sensor-Installer/4.png)
+
+## 5. Installer Navigation and Execution Model
+
+### Menu Navigation
+
+The installer provides an interactive menu-driven interface.
+
+- **Spacebar / ↓**: scroll forward
+- **↑**: scroll backward
+- **q**: exit a help or guide screen
+
+### State-Aware Execution
+
+Execution state is stored under:
+
+```text
+/root/xdr-installer
+```
+
+Completed steps are recorded, allowing the installer to:
+
+- resume automatically after reboot
+- skip already completed steps
+- safely rerun a selected step
+
+To clear all installer state:
+
+```bash
+rm -rf /root/xdr-installer
+```
+
+### DRY-RUN Mode
+
+- default: `DRY_RUN=1`
+- operations are simulated
+- no real system changes are applied
+
+Before real deployment, change it to:
+
+```text
+DRY_RUN=0
+```
+
+Use **3) Configuration**.
+
+### Main Menu Overview
+
+#### 1) Auto Execute All Steps
+
+- runs all steps beginning with the next incomplete step
+- resumes after reboot from the last completed step
+- recommended for:
+  - initial installation
+  - continuing after reboot
+
+#### 2) Select and Run Specific Step Only
+
+- runs one step independently
+- recommended for:
+  - Sensor VM redeployment
+  - network changes
+  - image updates
+  - SPAN changes
+
+#### 3) Configuration
+
+Configures:
+
+- `DRY_RUN` (default: `1`)
+- `SENSOR_VERSION`
+- `SENSOR_NET_MODE` (`nat` / `bridge`)
+- `SPAN_ATTACH_MODE` (`pci` / `bridge`)
+- ACPS credentials
+  - username
+  - password
+  - URL
+
+#### 4) Full Configuration Validation
+
+Validates:
+
+- KVM
+- Sensor VM
+- networking
+- SPAN
+- storage
+
+Detailed errors and warnings are displayed.
+
+#### 5) Script Usage Guide
+
+- displays the built-in help guide
+
+#### 6) View Log
+
+- displays the installer log
+
+#### 7) Exit
+
+- exits the installer
+
+## 6. Installation Scenarios
+
+### 6.1 New Installation
+
+From the main menu:
+
+1. select **3) Configuration**
+2. configure:
+   - `DRY_RUN = 0`
+   - `SENSOR_VERSION`
+   - `SENSOR_NET_MODE` (`nat` / `bridge`)
+   - `SPAN_ATTACH_MODE` (`pci` / `bridge`)
+   - ACPS credentials
+
+Return to the main menu and select:
+
+- **1) Auto Execute All Steps**
+
+![Sensor Installer Auto Execute All Steps screen](/images/Sensor-Installer/5.png)
+
+The installer runs:
+
+```text
+STEP 01 → STEP 02 → STEP 03 → … → STEP 10
+```
+
+Execution stops automatically if a reboot is required or an error occurs.
+
+### Mandatory Reboots
+
+The host is automatically rebooted after:
+
+- **STEP 03 – network configuration changes**
+- **STEP 05 – kernel and system tuning**
+
+After each reboot:
+
+1. log in again
+2. relaunch the installer
+3. select Menu 1
+
+The installer resumes from the next incomplete step.
+
+### 6.2 Run a Specific Step
+
+Select:
+
+- **2) Select and Run Specific Step Only**
+
+![Sensor Installer specific-step selection screen](/images/Sensor-Installer/6.png)
+
+Use this mode for:
+
+- network or SPAN changes
+- Sensor VM redeployment
+- reapplying tuning or hooks
+- recovery from a partial failure
+
+Only the selected step is executed.
+
+## 7. Post-Installation Validation
+
+After installation, select:
+
+- **4) Full Configuration Validation**
+
+![Sensor Installer Full Configuration Validation results](/images/Sensor-Installer/7.png)
+
+### Validation Scope
+
+Validation checks:
+
+- kernel and IOMMU configuration
+- NIC and interface status
+- KVM and libvirt service status
+- Sensor VM status and autostart
+- network bridges and routing
+- storage and mount points
+- system tuning parameters
+
+If WARN messages appear, use Menu 2 to rerun the relevant step.
+
+## 8. Common Post-Installation Changes
+
+### Automatic Reboot Notice
+
+- **STEP 03 always triggers a system reboot.**
+
+### Change Scenarios
+
+#### Change Management Network Mode (bridge ↔ nat)
+
+- Sensor VM redeployment is required
+- rerun:
+
+```text
+STEP 01 → STEP 03 → STEP 04 → STEP 08 → STEP 09
+```
+
+#### Change SPAN Mode or NIC
+
+Rerun:
+
+```text
+STEP 01 → STEP 03 → STEP 09
+```
+
+#### Changes While Keeping the Same Network Mode
+
+**Bridge mode**
+
+- change `HOST_NIC` or `DATA_NIC`
+
+```text
+STEP 01 → STEP 03
+```
+
+- change only the `HOST_NIC` IP
+
+```text
+STEP 03
+```
+
+**NAT mode**
+
+- change `HOST_NIC` (management uplink)
+
+```text
+STEP 01 → STEP 03
+```
+
+- change only the `HOST_NIC` IP
+
+```text
+STEP 03
+```
+
+#### Change SPAN Attachment Method (PCI Passthrough ↔ Bridge)
+
+Rerun:
+
+```text
+STEP 01 → STEP 03 → STEP 09
+```
+
+#### Redeploy the Sensor VM
+
+```text
+STEP 08 → STEP 09
+```
+
+<Warning>
+The existing Sensor VM is deleted.
+</Warning>
+
+#### Deploy a Different Sensor Version
+
+```text
+STEP 07 → STEP 08 → STEP 09
+```
+
+## 9. After Sensor Deployment
+
+### 9.1 Management Network
+
+The standalone Sensor KVM Installer supports both NAT and Bridge management modes.
+
+#### NAT Mode
+
+The Sensor VM uses the fixed KVM NAT address:
+
+- Sensor IP: `192.168.122.2/24`
+- Gateway: `192.168.122.1`
+- DNS: `8.8.8.8`
+
+Configure or verify these values from the Sensor CLI:
+
+```text
+set interface management ip 192.168.122.2/24
+set interface management gateway 192.168.122.1
+set interface management dns 8.8.8.8
+```
+
+#### Bridge Mode
+
+Bridge mode uses the Sensor management IP, netmask, gateway, and DNS values selected during Installer configuration.
+
+Do **not** replace a Bridge-mode address with the NAT values above. If manual correction is required, use the values assigned to your environment:
+
+```text
+set interface management ip <SENSOR-IP>/<NETMASK>
+set interface management gateway <GATEWAY>
+set interface management dns <DNS>
+```
+
+Verify the active management configuration:
+
+```text
+show interfaces
+```
+
+<Warning>
+The standalone Sensor Installer uses `192.168.122.2` for a NAT-mode Sensor. The **AIO & Sensor combined Installer** uses `192.168.122.3` for its Sensor because `192.168.122.2` is reserved for the AIO. For the combined deployment, follow **[AIO & Sensor Initial Configuration](/installers/aio-sensor-initial-configuration)** instead.
+</Warning>
+
+### 9.2 Log In and Change the Default Password
+
+Open the Sensor console and log in with the initial credentials:
+
+```text
+aella / changeme
+```
+
+You are prompted to change the password immediately. After the password change, the session closes automatically.
+
+Log in again with the new password. The prompt changes to:
+
+```text
+DataSensor>
+```
+
+### 9.3 Set a Unique Sensor Hostname
+
+The hostname is displayed in Stellar Cyber and should be unique for each Sensor.
+
+```text
+set hostname <SENSOR-HOSTNAME>
+```
+
+For example:
+
+```text
+set hostname sensor-site1
+```
+
+### 9.4 Connect the Sensor to the Data Platform
+
+Use `set cm` to configure the Stellar Cyber Platform management endpoint that this Sensor can reach.
+
+For a clustered Data Platform, use the **DL-master management interface address**. For a single DP/AIO deployment, use the **platform management IP address or hostname**.
+
+Examples:
+
+```text
+set cm <DP-MANAGEMENT-IP>
+```
+
+or:
+
+```text
+set cm <DP-HOSTNAME>
+```
+
+<Note>
+For the standalone Sensor Installer, `set cm` is **not** the Sensor's local NAT address `192.168.122.2`. It must be the reachable management address or hostname of the Stellar Cyber Platform.
+</Note>
+
+Verify the connection:
+
+```text
+show cm
+```
+
+Confirm that:
+
+- **CM Controller** shows the intended Data Platform address or hostname.
+- **Status** is **Established**.
+
+When the connection is established:
+
+```text
+quit
+```
+
+The Sensor automatically contacts the Stellar Cyber Platform and registers itself.
+
+### 9.5 Configure NTP and Timezone
+
+Stellar Cyber strongly recommends configuring NTP and the correct timezone on the Sensor.
+
+Accurate time synchronization is important for event timestamps, correlation, and troubleshooting.
+
+Refer to the [Stellar Cyber NTP and Timezone Best Practices](https://docs.stellarcyber.ai/6.5.x/Using/Guides/BestPractices-NTP.htm) for the supported procedure.
+
+### 9.6 Authorize the Sensor
+
+After the Sensor registers with the Stellar Cyber Platform, authorize it before using it for production data collection.
+
+Refer to the [Stellar Cyber Sensor authorization documentation](https://docs.stellarcyber.ai/6.5.x/Configure/Sensors/Sensor-List-Main.htm#Sensor).
+
+<Warning>
+A Sensor that has registered but has not been authorized is not ready for normal production operation.
+</Warning>
+
+### 9.7 CLI and SSH Access
+
+Appliance CLI:
+
+```text
+console mds
+```
+
+SSH access:
+
+- Sensor VM: **port 2222**
+
+
+## 10. Hardware and Software Requirements
+
+Before real execution, confirm:
+
+- Ubuntu Server 24.04 LTS
+- root access
+- 12 vCPU or more and 16 GB memory or more as the project starting baseline
+- at least 100 GB free in `ubuntu-vg`
+- a Management NIC and the required SPAN/data NICs
+- CPU virtualization enabled
+- VT-d/IOMMU enabled when using PCI Passthrough
+- network access for packages and Sensor image downloads
+- console or out-of-band access before network conversion
+
+Storage checks:
+
+```bash
+df -h
+vgs
+lvs
+```
+
+The **[Ubuntu 24.04 Installation Guide](/getting-started/installing-ubuntu-24-04)** is optional background; the Sensor-specific hardware baseline is fully summarized here.
+
+## 11. BIOS and Platform Settings
+
+Verify that these BIOS options are enabled:
+
+- Intel Virtualization Technology
+- VT-d / IOMMU
+
+
+## 12. Sensor Final Checklist
+
+- Full Configuration Validation has no unresolved FAIL.
+- Sensor VM is running and configured to autostart.
+- NAT mode uses `192.168.122.2/24`; Bridge mode uses the environment-specific management address.
+- `show interfaces` reports the expected management configuration.
+- Sensor hostname is unique.
+- `set cm` points to the reachable Data Platform management address, not the Sensor's own NAT IP.
+- `show cm` reports **Status: Established**.
+- NTP/timezone are configured.
+- Sensor authorization is complete in Stellar Cyber.
+- SPAN interfaces use the intended PCI Passthrough or Bridge design.

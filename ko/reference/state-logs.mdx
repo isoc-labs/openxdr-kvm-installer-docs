@@ -1,0 +1,32 @@
+---
+title: "상태 및 로그"
+description: "설치 프로그램의 설정, 작업 상태, 로그 파일 위치를 확인합니다."
+---
+
+# 상태 및 로그
+
+현재 문서화된 DP, Sensor, AIO + Sensor Installer는 실패나 재부팅 후 이어서 실행할 수 있도록 상태 파일을 사용합니다.
+
+## Root 실행
+
+Root로 실행할 때 일반적으로 다음 경로를 사용합니다.
+
+```text
+/root/xdr-installer/
+└── state/
+    ├── xdr_install.conf
+    ├── xdr_install.state
+    └── xdr_install.log
+```
+
+Sensor와 AIO Script는 Root가 아닌 경우 실행 User의 Home Directory를 사용할 수 있습니다.
+
+## File 역할
+
+- `xdr_install.conf` — Persistent Operator Configuration
+- `xdr_install.state` — Completed Step 및 Last-run Metadata
+- `xdr_install.log` — Execution / Troubleshooting Log
+
+<Warning>
+설정과 로그에는 환경별 정보가 포함될 수 있습니다. 외부 공유 전 인증 정보, 사설 주소, 인프라 정보를 마스킹하십시오.
+</Warning>

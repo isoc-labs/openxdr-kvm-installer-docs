@@ -1,0 +1,61 @@
+---
+title: "빠른 시작"
+description: "소스를 내려받고 DRY_RUN과 검증을 거쳐 설치를 실행한 뒤 재부팅 후 이어서 진행하는 방법을 설명합니다."
+---
+
+# 빠른 시작
+
+## 1. Root Shell에서 소스 준비
+
+`sudo -i`는 로그인 Shell로 전환되면서 작업 디렉터리가 바뀔 수 있으므로 **Root 전환을 먼저 수행**합니다.
+
+```bash
+sudo -i
+git clone https://github.com/xdr-labs/OpenXDR-KVM-Installer.git
+cd OpenXDR-KVM-Installer
+```
+
+## 2. 설치 프로그램 선택
+
+먼저 **[설치 프로그램 선택](/ko/getting-started/choose-installer)**에서 배포 대상과 네트워크 제약을 확인합니다.
+
+```bash
+./DP-Installer.sh
+./Sensor-Installer.sh
+./AIO-Sensor-Installer.sh
+```
+
+## 3. DRY_RUN 유지
+
+DRY_RUN은 기본적으로 활성화되어 있습니다. 설정 메뉴에서 버전, 인증 정보, NIC, 스토리지, 배포 입력값을 먼저 확인합니다.
+
+## 4. Full Configuration Validation 실행
+
+**OK / WARN / FAIL** 결과를 확인하고 **FAIL을 모두 해결**합니다. WARN은 내용을 확인하여 현재 배포에 허용 가능한 상태인지 판단합니다.
+
+## 5. 실제 실행 전 DRY_RUN 해제
+
+검증이 통과하면 NIC, IP, 디스크, 버전, 인증 정보를 다시 확인한 뒤 설정 메뉴에서 **`DRY_RUN=0`**으로 변경합니다.
+
+<Warning>
+`DRY_RUN=0`부터는 네트워크, 스토리지, 커널, VM 정의 등 실제 시스템 변경이 수행될 수 있습니다. 원격 작업 중이라면 콘솔 또는 Out-of-Band 접속을 확보하십시오.
+</Warning>
+
+## 6. 실행 방식 선택
+
+- **Auto Execute All Steps** — 첫 미완료 단계부터 자동 진행
+- **Execute Specific Step** — 선택한 단계만 실행하거나 재시도
+
+처음 배포하는 경우 일반적으로 **Auto Execute All Steps**를 사용합니다. 실패한 단계의 원인을 수정한 뒤에는 **Execute Specific Step**으로 해당 단계만 재실행할 수 있습니다.
+
+## 7. 재부팅 후 이어서 실행
+
+네트워크 또는 커널 단계에서 재부팅되면 같은 설치 프로그램을 다시 실행하고 Auto Execute를 선택합니다. 저장된 작업 상태를 기준으로 다음 미완료 단계부터 이어집니다.
+
+<Note>
+설치 프로그램의 상태와 로그 위치는 **[상태 및 로그](/ko/reference/state-logs)**에서 확인할 수 있습니다. 배포가 중단되었다고 상태 파일을 수동으로 수정해 완료 단계를 앞뒤로 이동하지 마십시오.
+</Note>
+
+## 8. 설치 데모 영상 보기
+
+전체 배포 흐름을 영상으로 확인하려면 **[설치 데모 비디오](/ko/getting-started/installation-demo-videos)**를 참고하십시오.

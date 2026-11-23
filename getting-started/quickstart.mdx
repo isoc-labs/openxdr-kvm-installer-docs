@@ -1,0 +1,61 @@
+---
+title: "Quickstart"
+description: "Clone the source and begin the DRY_RUN, validation, execution, and resume workflow."
+---
+
+# Quickstart
+
+## 1. Prepare the Source from a Root Shell
+
+Because `sudo -i` changes to a login shell and may change the working directory, **switch to root first**.
+
+```bash
+sudo -i
+git clone https://github.com/xdr-labs/OpenXDR-KVM-Installer.git
+cd OpenXDR-KVM-Installer
+```
+
+## 2. Choose an Installer
+
+Review **[Choose an Installer](/getting-started/choose-installer)** first to confirm the deployment target and network constraints.
+
+```bash
+./DP-Installer.sh
+./Sensor-Installer.sh
+./AIO-Sensor-Installer.sh
+```
+
+## 3. Keep DRY_RUN Enabled
+
+DRY_RUN is enabled by default. In the Configuration menu, first review the version, credentials, NICs, storage, and deployment inputs.
+
+## 4. Run Full Configuration Validation
+
+Review **OK / WARN / FAIL** results and **resolve every FAIL**. Review each WARN and decide whether it is acceptable for the target deployment.
+
+## 5. Disable DRY_RUN Before Real Execution
+
+After validation passes, re-check NICs, IP addresses, disks, versions, and credentials, then set **`DRY_RUN=0`** in the Configuration menu.
+
+<Warning>
+With `DRY_RUN=0`, the installer can make real changes to networking, storage, kernel settings, and VM definitions. If you are working remotely, ensure console or out-of-band access is available.
+</Warning>
+
+## 6. Choose the Execution Mode
+
+- **Auto Execute All Steps** — continue automatically from the first incomplete step
+- **Execute Specific Step** — run or retry only the selected step
+
+For a first deployment, **Auto Execute All Steps** is normally appropriate. After correcting the cause of a failed step, use **Execute Specific Step** when only that step needs to be rerun.
+
+## 7. Resume After Reboot
+
+When a networking or kernel step triggers a reboot, relaunch the same installer and select Auto Execute. The installer resumes from the next incomplete step using the saved state.
+
+<Note>
+See **[State and Logs](/reference/state-logs)** for installer state and log locations. Do not manually move the state file backward or forward just because a deployment was interrupted.
+</Note>
+
+## 8. Watch the Installation Demos
+
+For a visual walkthrough of the deployment flow, see **[Installation Demo Videos](/getting-started/installation-demo-videos)**.

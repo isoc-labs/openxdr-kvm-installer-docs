@@ -1,0 +1,49 @@
+---
+title: "Networking"
+description: "Reference management, VM, SPAN, SR-IOV and passthrough networking across the active installer families."
+---
+
+# Networking
+
+Use each product installer page as the deployment runbook. This page is a cross-product reference.
+
+## Fixed KVM NAT Addressing
+
+| Deployment | VM / purpose | Address |
+| --- | --- | --- |
+| KVM NAT gateway | `virbr0` | `192.168.122.1` |
+| DP | DL | `192.168.122.2/24` |
+| DP | DA | `192.168.122.3/24` |
+| Standalone Sensor, NAT mode | Sensor | `192.168.122.2/24` |
+| AIO + Sensor | AIO | `192.168.122.2/24` |
+| AIO + Sensor | Sensor/MDS | `192.168.122.3/24` |
+
+These guest NAT addresses are different from the KVM host Management IP. In multi-host DP deployments, each physical KVM host has its own local NAT network, so the same DL/DA NAT addresses can exist on different hosts.
+
+## DP Cluster Network
+
+The DP cluster interface is separate from the NAT management interface. The examples use:
+
+- DL Master: `192.168.12.25/24`
+- DL Worker 1: `192.168.12.26/24`
+- DA Master: `192.168.12.50/24`
+
+Cluster addresses must be unique. Identify the actual cluster NIC with `show interface all`.
+
+## Sensor Data Path
+
+Standalone Sensor supports NAT or Bridge management and PCI Passthrough or Bridge SPAN attachment. The documented AIO + Sensor path uses NAT management and PCI Passthrough for Sensor SPAN.
+
+## SR-IOV and PCI Passthrough
+
+- DP can use SR-IOV for cluster networking.
+- Sensor SPAN can use PCI Passthrough where supported.
+- IOMMU/VT-d or AMD-Vi must be enabled for direct device assignment.
+
+## Network Conversion
+
+Step 3 in the active installer families performs NIC naming / ifupdown conversion and network configuration, then may reboot the host.
+
+<Warning>
+Confirm console or out-of-band access before network conversion. A wrong NIC or address selection can remove remote connectivity.
+</Warning>
