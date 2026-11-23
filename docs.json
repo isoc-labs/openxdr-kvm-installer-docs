@@ -20,7 +20,10 @@
     "prompt": "문서 검색 / Search KVM Installer docs..."
   },
   "seo": {
-    "indexing": "navigable"
+    "indexing": "navigable",
+    "metatags": {
+      "canonical": "https://kvm.isoc.ooo"
+    }
   },
   "appearance": {
     "default": "system",
@@ -163,6 +166,6 @@
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
-    "href": "https://kvm.xdr.ooo"
+    "href": "https://kvm.isoc.ooo"
   }
 }
