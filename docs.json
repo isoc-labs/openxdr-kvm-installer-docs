@@ -13,7 +13,7 @@
     "primary": {
       "type": "button",
       "label": "Installer Source",
-      "href": "https://github.com/xdr-labs/OpenXDR-KVM-Installer"
+      "href": "https://github.com/isoc-labs/OpenXDR-KVM-Installer"
     }
   },
   "search": {
